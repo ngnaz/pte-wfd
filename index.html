@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luyện Tập PTE - Write From Dictation</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --bg-color: #f5f7fa;
+            --card-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            text-align: right;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .audio-section {
+            background: #f0f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .word-count {
+            text-align: right;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-submit { background-color: var(--primary-color); color: white; }
+        .btn-submit:hover { background-color: #357abd; }
+
+        .btn-next { background-color: #e0e0e0; color: #333; }
+        .btn-next:hover { background-color: #d0d0d0; }
+
+        .result-section {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result-active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .comparison-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #ddd;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+
+        .correct { color: var(--success-color); font-weight: bold; }
+        .incorrect { color: var(--danger-color); text-decoration: line-through; }
+        .missing { color: #f39c12; font-style: italic; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>PTE Write From Dictation</h1>
+    <div class="subtitle">Nghe và chép lại chính xác câu bạn nghe được</div>
+
+    <div class="progress-bar" id="progress">Câu: 0/0</div>
+
+    <div class="audio-section">
+        <audio id="audioPlayer" controls controlsList="nodownload"></audio>
+    </div>
+
+    <textarea id="userInput" placeholder="Nhập câu trả lời của bạn tại đây... (Chú ý viết hoa chữ cái đầu và dấu chấm câu nếu có)"></textarea>
+    <div class="word-count" id="wordCount">Số từ: 0</div>
+
+    <div class="controls">
+        <button class="btn-submit" id="submitBtn" onclick="checkAnswer()">Nộp bài (Check)</button>
+        <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Câu Tiếp Theo</button>
+    </div>
+
+    <div class="result-section" id="resultSection">
+        <div class="score" id="scoreDisplay"></div>
+        <div style="margin-bottom: 5px; font-weight: bold; color: #555;">Kết quả chi tiết:</div>
+        <div class="comparison-box" id="comparisonDisplay"></div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. DANH SÁCH CÂU HỎI (Bạn tự thêm câu ở đây)
+    // ==========================================
+    const originalQuestions = [
+        {
+            audio: "audio/wfd_cau_1.mp3",
+            transcript: "Medical researchers have focused on the causes of these diseases."
+        },
+        {
+            audio: "audio/wfd_cau_2.mp3",
+            transcript: "The most important process of farming is the preparation of the soil."
+        },
+        {
+            audio: "audio/wfd_cau_3.mp3",
+            transcript: "An ancient text was discovered in the old monastery library."
+        }
+    ];
+
+    let questions = [];
+    let currentIndex = 0;
+
+    // ==========================================
+    // 2. KHỞI TẠO & XÁO TRỘN MẢNG (Shuffle)
+    // ==========================================
+    function shuffleQuestions() {
+        // Sao chép mảng gốc để không làm thay đổi dữ liệu gốc
+        questions = [...originalQuestions];
+        // Thuật toán xáo trộn Fisher-Yates
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
+    }
+
+    function initQuiz() {
+        shuffleQuestions();
+        currentIndex = 0;
+        if(questions.length > 0) {
+            loadQuestion(currentIndex);
+        } else {
+            alert("Vui lòng thêm câu hỏi vào danh sách mã nguồn!");
+        }
+    }
+
+    // ==========================================
+    // 3. TẢI CÂU HỎI HIỆN TẠI
+    // ==========================================
+    function loadQuestion(index) {
+        const audioPlayer = document.getElementById('audioPlayer');
+        const userInput = document.getElementById('userInput');
+        const progress = document.getElementById('progress');
+        const resultSection = document.getElementById('resultSection');
+
+        progress.innerText = `Câu: ${index + 1}/${questions.length}`;
+        audioPlayer.src = questions[index].audio;
+        userInput.value = "";
+        document.getElementById('wordCount').innerText = "Số từ: 0";
+        
+        // Ẩn phần kết quả của câu cũ
+        resultSection.classList.remove('result-active');
+        audioPlayer.load(); // Tải lại file audio mới
+    }
+
+    // Đếm số từ khi người dùng gõ
+    document.getElementById('userInput').addEventListener('input', function() {
+        const words = this.value.trim().split(/\s+/).filter(w => w.length > 0);
+        document.getElementById('wordCount').innerText = `Số từ: ${words.length}`;
+    });
+
+    // ==========================================
+    // 4. KIỂM TRA VÀ CHẤM ĐIỂM (Algorithm)
+    // ==========================================
+    function cleanWord(word) {
+        // Xóa dấu câu ở đầu/cuối từ để so sánh chính xác mặt chữ (giống PTE thật)
+        return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
+    }
+
+    function checkAnswer() {
+        const userText = document.getElementById('userInput').value.trim();
+        const correctText = questions[currentIndex].transcript;
+
+        if (!userText) {
+            alert("Vui lòng gõ nội dung nghe được trước khi nộp!");
+            return;
+        }
+
+        const userWords = userText.split(/\s+/);
+        const correctWords = correctText.split(/\s+/);
+
+        let matchCount = 0;
+        let htmlResult = "";
+
+        // Thuật toán so khớp cơ bản để hiển thị màu sắc (Đúng/Sai/Thiếu)
+        // Lưu ý: PTE chấm điểm dựa trên sự xuất hiện của từ đúng trong câu.
+        correctWords.forEach((cWord) => {
+            const cleanCWord = cleanWord(cWord);
+            
+            // Tìm xem từ đúng này có nằm trong các từ user gõ không
+            const foundIndex = userWords.findIndex(uWord => cleanWord(uWord) === cleanCWord);
+
+            if (foundIndex !== -1) {
+                matchCount++;
+                htmlResult += `<span class="correct">${cWord}</span> `;
+                // Xóa từ đã dùng để tránh trùng lặp nếu user gõ lặp từ
+                userWords.splice(foundIndex, 1);
+            } else {
+                htmlResult += `<span class="missing">${cWord}</span> `;
+            }
+        });
+
+        // Hiển thị kết quả
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const totalWords = correctWords.length;
+        
+        scoreDisplay.innerHTML = `Điểm của bạn: <span style="color: var(--primary-color)">${matchCount}/${totalWords}</span> từ chính xác.`;
+        
+        const comparisonDisplay = document.getElementById('comparisonDisplay');
+        comparisonDisplay.innerHTML = htmlResult + `<br><br><small style="color: #888">* Chú thích: <span class="correct">Đúng</span> | <span class="missing">Sai hoặc Thiếu từ này</span></small>`;
+
+        document.getElementById('resultSection').classList.add('result-active');
+    }
+
+    // ==========================================
+    // 5. CHUYỂN CÂU
+    // ==========================================
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < questions.length) {
+            loadQuestion(currentIndex);
+        } else {
+            if (confirm("Bạn đã hoàn thành hết các câu hỏi! Bạn có muốn trộn lại đề để học tiếp không?")) {
+                initQuiz();
+            }
+        }
+    }
+
+    // Chạy ứng dụng khi load xong trang
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
