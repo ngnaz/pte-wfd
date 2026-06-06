@@ -623,11 +623,28 @@
         document.getElementById('wordCount').innerText = `Số từ: ${words.length}`;
     });
 
-    // BẮT SỰ KIỆN KHI NHẤN PHÍM ENTER TRÊN Ô NHẬP LIỆU
+    // ==========================================
+    // XỬ LÝ PHÍM TẮT: ENTER (CHECK) VÀ SPACE (AUDIO)
+    // ==========================================
     document.getElementById('userInput').addEventListener('keydown', function(event) {
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        // 1. Nhấn phím ENTER để check đáp án
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Chặn xuống dòng
             checkAnswer(); // Kích hoạt hàm kiểm tra đáp án
+        }
+
+        // 2. Nhấn phím SPACE khi ô nhập LIỆU ĐANG TRỐNG để Bật/Tắt Audio
+        if (event.key === ' ' || event.code === 'Space') {
+            if (this.value.trim() === "") {
+                event.preventDefault(); // Ngăn chặn gõ dấu cách vào ô trống
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                } else {
+                    audioPlayer.pause();
+                }
+            }
         }
     });
 
@@ -665,14 +682,16 @@
     }
 
     // ==========================================
-    // 4. KIỂM TRA ĐÁP ÁN THEO THỨ TỰ XUẤT HIỆN
+    // 4. KIỂM TRA ĐÁP ÁN & ĐIỀU CHỈNH Ô NHẬP LIỆU
     // ==========================================
     function cleanWord(word) {
+        if (!word) return "";
         return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
     }
 
     function checkAnswer() {
-        const userText = document.getElementById('userInput').value.trim();
+        const userInput = document.getElementById('userInput');
+        const userText = userInput.value.trim();
         const correctText = questions[currentIndex].transcript;
 
         if (!userText) {
@@ -685,6 +704,7 @@
 
         let correctCount = 0;
         let htmlResult = "";
+        let updatedUserWords = []; // Mảng chứa các từ sau khi lọc lỗi để đưa ngược lại ô nhập liệu
 
         userWords.forEach((uWord, index) => {
             const cleanUWord = cleanWord(uWord);
@@ -693,11 +713,15 @@
             if (correspondingCorrectWord && cleanUWord === cleanWord(correspondingCorrectWord)) {
                 correctCount++;
                 htmlResult += `<span class="correct">${uWord}</span> `;
+                // Từ đúng -> Giữ lại nguyên vẹn trong ô nhập liệu
+                updatedUserWords.push(uWord);
             } else {
                 htmlResult += `<span class="incorrect">${uWord}</span> `;
+                // Từ sai -> Không thêm vào updatedUserWords (tương đương với việc gạch bỏ/xóa đi trong ô nhập liệu)
             }
         });
 
+        // 1. Hiển thị bảng điểm và màu sắc trực quan phía dưới
         const scoreDisplay = document.getElementById('scoreDisplay');
         scoreDisplay.innerHTML = `Khớp: <span style="color: var(--primary-color)">${correctCount}/${correctWords.length}</span> từ hệ thống.`;
         
@@ -706,6 +730,17 @@
 
         document.getElementById('fullAnswerBox').innerText = correctText;
         document.getElementById('resultSection').classList.add('result-active');
+
+        // 2. CẬP NHẬT LẠI Ô NHẬP LIỆU: Chỉ giữ lại từ đúng, tự động thêm dấu cách ở cuối để người dùng gõ tiếp câu sau luôn
+        if (updatedUserWords.length > 0) {
+            userInput.value = updatedUserWords.join(" ") + " ";
+        } else {
+            userInput.value = ""; // Nếu sai hết thì xóa trắng để gõ lại từ đầu
+        }
+        
+        // Kích hoạt lại sự kiện thay đổi số từ hiển thị
+        userInput.dispatchEvent(new Event('input'));
+        userInput.focus();
     }
 
     // ẨN / HIỆN ĐÁP ÁN ĐẦY ĐỦ
