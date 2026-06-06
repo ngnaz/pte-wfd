@@ -173,12 +173,16 @@
         <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Câu Tiếp Theo</button>
     </div>
 
-    <div class="result-section" id="resultSection">
+   <div class="result-section" id="resultSection">
         <div class="score" id="scoreDisplay"></div>
-        <div style="margin-bottom: 5px; font-weight: bold; color: #555;">Kết quả chi tiết:</div>
+        <div style="margin-bottom: 5px; font-weight: bold; color: #555;">Tiến độ gõ của bạn:</div>
         <div class="comparison-box" id="comparisonDisplay"></div>
+        
+        <div style="margin-top: 15px; text-align: right;">
+            <span id="toggleAnsBtn" onclick="toggleFullAnswer()" style="color: var(--primary-color); cursor: pointer; font-size: 0.9rem; text-decoration: underline;">[Xem đáp án đầy đủ]</span>
+            <div id="fullAnswerBox" style="display: none; margin-top: 10px; padding: 10px; background: #fff; border: 1px dashed #ccc; text-align: left; font-weight: 500; color: #333;"></div>
+        </div>
     </div>
-</div>
 
 <script>
     // ==========================================
@@ -209,14 +213,13 @@
 
     let questions = [];
     let currentIndex = 0;
+    let isAnswerShowing = false; // Trạng thái ẩn/hiện đáp án đầy đủ
 
     // ==========================================
     // 2. KHỞI TẠO & XÁO TRỘN MẢNG (Shuffle)
     // ==========================================
     function shuffleQuestions() {
-        // Sao chép mảng gốc để không làm thay đổi dữ liệu gốc
         questions = [...originalQuestions];
-        // Thuật toán xáo trộn Fisher-Yates
         for (let i = questions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [questions[i], questions[j]] = [questions[j], questions[i]];
@@ -241,15 +244,21 @@
         const userInput = document.getElementById('userInput');
         const progress = document.getElementById('progress');
         const resultSection = document.getElementById('resultSection');
+        const fullAnswerBox = document.getElementById('fullAnswerBox');
+        const toggleAnsBtn = document.getElementById('toggleAnsBtn');
 
         progress.innerText = `Câu: ${index + 1}/${questions.length}`;
         audioPlayer.src = questions[index].audio;
         userInput.value = "";
         document.getElementById('wordCount').innerText = "Số từ: 0";
         
-        // Ẩn phần kết quả của câu cũ
+        // Reset trạng thái hiển thị đáp án ẩn
         resultSection.classList.remove('result-active');
-        audioPlayer.load(); // Tải lại file audio mới
+        fullAnswerBox.style.display = "none";
+        toggleAnsBtn.innerText = "[Xem đáp án đầy đủ]";
+        isAnswerShowing = false;
+
+        audioPlayer.load(); 
     }
 
     // Đếm số từ khi người dùng gõ
@@ -258,8 +267,16 @@
         document.getElementById('wordCount').innerText = `Số từ: ${words.length}`;
     });
 
+    // BẮT SỰ KIỆN KHI NHẤN PHÍM ENTER TRÊN Ô NHẬP LIỆU
+    document.getElementById('userInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Chặn xuống dòng
+            checkAnswer(); // Kích hoạt hàm kiểm tra đáp án
+        }
+    });
+
     // ==========================================
-    // TÍNH NĂNG MỚI: GỢI Ý 1 TỪ TIẾP THEO
+    // GỢI Ý 1 TỪ TIẾP THEO
     // ==========================================
     function giveHint() {
         const userInput = document.getElementById('userInput');
@@ -270,25 +287,20 @@
 
         let nextWordHint = "";
 
-        // So khớp từ đầu đến cuối để tìm từ đầu tiên bị sai hoặc thiếu
         for (let i = 0; i < correctWords.length; i++) {
-            // Nếu người dùng chưa gõ đến từ này, hoặc gõ sai từ này
             if (!userWords[i] || cleanWord(userWords[i]) !== cleanWord(correctWords[i])) {
                 nextWordHint = correctWords[i];
                 break;
             }
         }
 
-        // Nếu tìm thấy từ cần gợi ý, điền nó vào ô nhập liệu
         if (nextWordHint) {
             if (userInput.value.trim() === "") {
                 userInput.value = nextWordHint;
             } else {
-                // Thêm một dấu cách trước khi chèn từ gợi ý nếu từ cuối chưa có dấu cách
                 const currentText = userInput.value;
                 userInput.value = currentText.match(/\s$/) ? currentText + nextWordHint : currentText + " " + nextWordHint;
             }
-            // Cập nhật lại số từ hiển thị
             userInput.dispatchEvent(new Event('input'));
             userInput.focus();
         } else {
@@ -297,7 +309,7 @@
     }
 
     // ==========================================
-    // 4. KIỂM TRA VÀ CHẤM ĐIỂM TOÀN BỘ
+    // 4. KIỂM TRA ĐÁP ÁN THEO THỨ TỰ XUẤT HIỆN
     // ==========================================
     function cleanWord(word) {
         return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
@@ -312,45 +324,50 @@
             return;
         }
 
-        // Tách từ nhưng giữ nguyên mảng gốc để đối chiếu vị trí (giúp chấm điểm trực quan hơn)
         const userWords = userText.split(/\s+/);
         const correctWords = correctText.split(/\s+/);
 
-        let matchCount = 0;
+        let correctCount = 0;
         let htmlResult = "";
 
-        // Copy mảng user để đánh dấu các từ đã khớp
-        let tempUserWords = [...userWords].map(w => cleanWord(w));
+        userWords.forEach((uWord, index) => {
+            const cleanUWord = cleanWord(uWord);
+            const correspondingCorrectWord = correctWords[index];
 
-        correctWords.forEach((cWord) => {
-            const cleanCWord = cleanWord(cWord);
-            const foundIndex = tempUserWords.indexOf(cleanCWord);
-
-            if (foundIndex !== -1) {
-                matchCount++;
-                htmlResult += `<span class="correct">${cWord}</span> `;
-                // Xóa từ đã dùng để không bị tính trùng cho từ sau
-                tempUserWords[foundIndex] = null;
+            if (correspondingCorrectWord && cleanUWord === cleanWord(correspondingCorrectWord)) {
+                correctCount++;
+                htmlResult += `<span class="correct">${uWord}</span> `;
             } else {
-                htmlResult += `<span class="missing">${cWord}</span> `;
+                htmlResult += `<span class="incorrect">${uWord}</span> `;
             }
         });
 
-        // Hiển thị kết quả chấm điểm toàn bộ
         const scoreDisplay = document.getElementById('scoreDisplay');
-        const totalWords = correctWords.length;
-        
-        scoreDisplay.innerHTML = `Điểm của bạn: <span style="color: var(--primary-color)">${matchCount}/${totalWords}</span> từ chính xác.`;
+        scoreDisplay.innerHTML = `Khớp: <span style="color: var(--primary-color)">${correctCount}/${correctWords.length}</span> từ hệ thống.`;
         
         const comparisonDisplay = document.getElementById('comparisonDisplay');
-        comparisonDisplay.innerHTML = htmlResult + `<br><br><small style="color: #888">* Chú thích: <span class="correct">Đúng</span> | <span class="missing">Sai hoặc Thiếu từ này</span></small>`;
+        comparisonDisplay.innerHTML = htmlResult + `<br><br><small style="color: #888">* Chú thích: <span class="correct">Đúng từ & thứ tự</span> | <span class="incorrect">Sai chính tả hoặc sai vị trí</span></small>`;
 
+        document.getElementById('fullAnswerBox').innerText = correctText;
         document.getElementById('resultSection').classList.add('result-active');
     }
 
-    // ==========================================
-    // 5. CHUYỂN CÂU
-    // ==========================================
+    // ẨN / HIỆN ĐÁP ÁN ĐẦY ĐỦ
+    function toggleFullAnswer() {
+        const fullAnswerBox = document.getElementById('fullAnswerBox');
+        const toggleAnsBtn = document.getElementById('toggleAnsBtn');
+
+        if (!isAnswerShowing) {
+            fullAnswerBox.style.display = "block";
+            toggleAnsBtn.innerText = "[Ẩn đáp án đầy đủ]";
+            isAnswerShowing = true;
+        } else {
+            fullAnswerBox.style.display = "none";
+            toggleAnsBtn.innerText = "[Xem đáp án đầy đủ]";
+            isAnswerShowing = false;
+        }
+    }
+
     function nextQuestion() {
         currentIndex++;
         if (currentIndex < questions.length) {
@@ -362,7 +379,6 @@
         }
     }
 
-    // Chạy ứng dụng khi load xong trang
     window.onload = initQuiz;
 </script>
 
