@@ -109,6 +109,9 @@
 
         .btn-submit { background-color: var(--primary-color); color: white; }
         .btn-submit:hover { background-color: #357abd; }
+        
+        .btn-hint { background-color: #f39c12; color: white; }
+        .btn-hint:hover { background-color: #d68010; }
 
         .btn-next { background-color: #e0e0e0; color: #333; }
         .btn-next:hover { background-color: #d0d0d0; }
@@ -165,7 +168,8 @@
     <div class="word-count" id="wordCount">Số từ: 0</div>
 
     <div class="controls">
-        <button class="btn-submit" id="submitBtn" onclick="checkAnswer()">Nộp bài (Check)</button>
+        <button class="btn-hint" id="hintBtn" onclick="giveHint()">Gợi ý 1 từ</button>
+        <button class="btn-submit" id="submitBtn" onclick="checkAnswer()">Check toàn bộ</button>
         <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Câu Tiếp Theo</button>
     </div>
 
@@ -255,10 +259,47 @@
     });
 
     // ==========================================
-    // 4. KIỂM TRA VÀ CHẤM ĐIỂM (Algorithm)
+    // TÍNH NĂNG MỚI: GỢI Ý 1 TỪ TIẾP THEO
+    // ==========================================
+    function giveHint() {
+        const userInput = document.getElementById('userInput');
+        const correctText = questions[currentIndex].transcript;
+        
+        const userWords = userInput.value.trim().split(/\s+/).filter(w => w.length > 0);
+        const correctWords = correctText.split(/\s+/);
+
+        let nextWordHint = "";
+
+        // So khớp từ đầu đến cuối để tìm từ đầu tiên bị sai hoặc thiếu
+        for (let i = 0; i < correctWords.length; i++) {
+            // Nếu người dùng chưa gõ đến từ này, hoặc gõ sai từ này
+            if (!userWords[i] || cleanWord(userWords[i]) !== cleanWord(correctWords[i])) {
+                nextWordHint = correctWords[i];
+                break;
+            }
+        }
+
+        // Nếu tìm thấy từ cần gợi ý, điền nó vào ô nhập liệu
+        if (nextWordHint) {
+            if (userInput.value.trim() === "") {
+                userInput.value = nextWordHint;
+            } else {
+                // Thêm một dấu cách trước khi chèn từ gợi ý nếu từ cuối chưa có dấu cách
+                const currentText = userInput.value;
+                userInput.value = currentText.match(/\s$/) ? currentText + nextWordHint : currentText + " " + nextWordHint;
+            }
+            // Cập nhật lại số từ hiển thị
+            userInput.dispatchEvent(new Event('input'));
+            userInput.focus();
+        } else {
+            alert("Bạn đã gõ chính xác hoàn toàn rồi, không cần gợi ý nữa!");
+        }
+    }
+
+    // ==========================================
+    // 4. KIỂM TRA VÀ CHẤM ĐIỂM TOÀN BỘ
     // ==========================================
     function cleanWord(word) {
-        // Xóa dấu câu ở đầu/cuối từ để so sánh chính xác mặt chữ (giống PTE thật)
         return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
     }
 
@@ -271,31 +312,31 @@
             return;
         }
 
+        // Tách từ nhưng giữ nguyên mảng gốc để đối chiếu vị trí (giúp chấm điểm trực quan hơn)
         const userWords = userText.split(/\s+/);
         const correctWords = correctText.split(/\s+/);
 
         let matchCount = 0;
         let htmlResult = "";
 
-        // Thuật toán so khớp cơ bản để hiển thị màu sắc (Đúng/Sai/Thiếu)
-        // Lưu ý: PTE chấm điểm dựa trên sự xuất hiện của từ đúng trong câu.
+        // Copy mảng user để đánh dấu các từ đã khớp
+        let tempUserWords = [...userWords].map(w => cleanWord(w));
+
         correctWords.forEach((cWord) => {
             const cleanCWord = cleanWord(cWord);
-            
-            // Tìm xem từ đúng này có nằm trong các từ user gõ không
-            const foundIndex = userWords.findIndex(uWord => cleanWord(uWord) === cleanCWord);
+            const foundIndex = tempUserWords.indexOf(cleanCWord);
 
             if (foundIndex !== -1) {
                 matchCount++;
                 htmlResult += `<span class="correct">${cWord}</span> `;
-                // Xóa từ đã dùng để tránh trùng lặp nếu user gõ lặp từ
-                userWords.splice(foundIndex, 1);
+                // Xóa từ đã dùng để không bị tính trùng cho từ sau
+                tempUserWords[foundIndex] = null;
             } else {
                 htmlResult += `<span class="missing">${cWord}</span> `;
             }
         });
 
-        // Hiển thị kết quả
+        // Hiển thị kết quả chấm điểm toàn bộ
         const scoreDisplay = document.getElementById('scoreDisplay');
         const totalWords = correctWords.length;
         
