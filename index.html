@@ -66,21 +66,31 @@
             width: 100%;
         }
 
-        textarea {
+        #userInput {
             width: 100%;
-            height: 120px;
+            min-height: 120px;
             padding: 12px;
             box-sizing: border-box;
             border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 16px;
-            resize: vertical;
+            font-size: 18px;
+            line-height: 1.6;
+            background-color: #fff;
             transition: border-color 0.3s;
+            outline: none;
+            overflow-y: auto;
         }
 
-        textarea:focus {
+        #userInput:focus {
             border-color: var(--primary-color);
-            outline: none;
+        }
+
+        /* Khi ô trống, hiển thị placeholder giống DailyDictation */
+        #userInput:empty:before {
+            content: attr(placeholder);
+            color: #999;
+            font-size: 15px;
+        }
         }
 
         .word-count {
@@ -142,10 +152,20 @@
             line-height: 1.6;
         }
 
-        .correct { color: var(--success-color); font-weight: bold; }
-        .incorrect { color: var(--danger-color); text-decoration: line-through; }
-        .missing { color: #f39c12; font-style: italic; }
+        .w-correct {
+            color: var(--success-color);
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+        }
 
+        .w-incorrect {
+            color: var(--danger-color);
+            font-weight: bold;
+            text-decoration: underline;
+            display: inline-block;
+            margin-right: 5px;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -164,7 +184,7 @@
         <audio id="audioPlayer" controls controlsList="nodownload"></audio>
     </div>
 
-    <textarea id="userInput" placeholder="Nhập câu trả lời của bạn tại đây... (Chú ý viết hoa chữ cái đầu và dấu chấm câu nếu có)"></textarea>
+    <div id="userInput" contenteditable="true" placeholder="Nhập câu trả lời của bạn tại đây... (Nhấn Space khi ô trống để Bật/Tắt Audio, nhấn Enter để Check)"></div>
     <div class="word-count" id="wordCount">Số từ: 0</div>
 
     <div class="controls">
