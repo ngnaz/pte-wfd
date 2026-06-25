@@ -703,68 +703,75 @@
         }
     }
 
+   // ==========================================
+    // 4. THUẬT TOÁN CHẤM ĐIỂM CHUẨN DAILY DICTATION (ĐÃ FIX LỖI NHẬN DIỆN TEXT)
     // ==========================================
-    // 4. KIỂM TRA ĐÁP ÁN & ĐIỀU CHỈNH Ô NHẬP LIỆU
-    // ==========================================
-    function cleanWord(word) {
-        if (!word) return "";
-        return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
-    }
-
     function checkAnswer() {
         const userInput = document.getElementById('userInput');
-        const userText = userInput.value.trim();
-        const correctText = questions[currentIndex].transcript;
+        
+        // Lấy text và làm sạch triệt để các ký tự khoảng trắng đặc biệt do trình duyệt tự sinh ra (&nbsp;, <br>)
+        let userText = userInput.innerText;
+        userText = userText.replace(/\u00a0/g, " "); // Biến ký tự khoảng trắng ẩn &nbsp; thành dấu cách thường
+        userText = userText.trim();
 
-        if (!userText) {
-            alert("Vui lòng gõ nội dung nghe được trước khi nộp!");
+        // Kiểm tra xem người dùng đã thực sự gõ chữ chưa (loại bỏ trường hợp chỉ có khoảng trắng)
+        if (!userText || userText.length === 0) {
+            alert("Vui lòng gõ nội dung nghe được!");
             return;
         }
 
-        const userWords = userText.split(/\s+/);
+        const userWords = userText.split(/\s+/).filter(w => w.length > 0);
+        const correctText = questions[currentIndex].transcript;
         const correctWords = correctText.split(/\s+/);
 
         let correctCount = 0;
-        let htmlResult = "";
-        let updatedUserWords = []; // Mảng chứa các từ sau khi lọc lỗi để đưa ngược lại ô nhập liệu
+        userInput.innerHTML = ""; // Xóa để tạo lại các từ có màu
 
         userWords.forEach((uWord, index) => {
+            // Nếu từ đó chứa ký tự gạch dưới (người dùng chưa sửa từ sai cũ), giữ nguyên dấu gạch dưới đỏ
+            if (uWord.includes('_')) {
+                let underlineSpan = document.createElement('span');
+                underlineSpan.className = 'w-incorrect';
+                underlineSpan.innerText = uWord;
+                userInput.appendChild(underlineSpan);
+                userInput.appendChild(document.createTextNode(" "));
+                return;
+            }
+
             const cleanUWord = cleanWord(uWord);
             const correspondingCorrectWord = correctWords[index];
 
             if (correspondingCorrectWord && cleanUWord === cleanWord(correspondingCorrectWord)) {
                 correctCount++;
-                htmlResult += `<span class="correct">${uWord}</span> `;
-                // Từ đúng -> Giữ lại nguyên vẹn trong ô nhập liệu
-                updatedUserWords.push(uWord);
+                // Từ ĐÚNG: Hiện màu xanh lá giống DailyDictation
+                let span = document.createElement('span');
+                span.className = 'w-correct';
+                span.innerText = correspondingCorrectWord; // Lấy theo đúng định dạng gốc của đáp án
+                userInput.appendChild(span);
             } else {
-                htmlResult += `<span class="incorrect">${uWord}</span> `;
-                // Từ sai -> Không thêm vào updatedUserWords (tương đương với việc gạch bỏ/xóa đi trong ô nhập liệu)
+                // Từ SAI: Biến thành chuỗi dấu gạch dưới `_` đỏ có độ dài bằng từ đúng tại vị trí đó
+                const targetWord = correspondingCorrectWord ? correspondingCorrectWord : uWord;
+                const underscores = "_".repeat(targetWord.length);
+                
+                let span = document.createElement('span');
+                span.className = 'w-incorrect';
+                span.innerText = underscores;
+                userInput.appendChild(span);
             }
+            // Thêm khoảng trắng giữa các từ
+            userInput.appendChild(document.createTextNode(" "));
         });
 
-        // 1. Hiển thị bảng điểm và màu sắc trực quan phía dưới
+        // Hiển thị điểm số ở góc dưới
         const scoreDisplay = document.getElementById('scoreDisplay');
-        scoreDisplay.innerHTML = `Khớp: <span style="color: var(--primary-color)">${correctCount}/${correctWords.length}</span> từ hệ thống.`;
+        scoreDisplay.innerHTML = `Khớp đúng: <span style="color: var(--success-color)">${correctCount}/${correctWords.length}</span> từ.`;
         
-        const comparisonDisplay = document.getElementById('comparisonDisplay');
-        comparisonDisplay.innerHTML = htmlResult + `<br><br><small style="color: #888">* Chú thích: <span class="correct">Đúng từ & thứ tự</span> | <span class="incorrect">Sai chính tả hoặc sai vị trí</span></small>`;
-
         document.getElementById('fullAnswerBox').innerText = correctText;
         document.getElementById('resultSection').classList.add('result-active');
 
-        // 2. CẬP NHẬT LẠI Ô NHẬP LIỆU: Chỉ giữ lại từ đúng, tự động thêm dấu cách ở cuối để người dùng gõ tiếp câu sau luôn
-        if (updatedUserWords.length > 0) {
-            userInput.value = updatedUserWords.join(" ") + " ";
-        } else {
-            userInput.value = ""; // Nếu sai hết thì xóa trắng để gõ lại từ đầu
-        }
-        
-        // Kích hoạt lại sự kiện thay đổi số từ hiển thị
-        userInput.dispatchEvent(new Event('input'));
-        userInput.focus();
+        // Đưa con trỏ chuột về cuối ô gõ để người dùng sửa tiếp dễ dàng
+        placeCaretAtEnd(userInput);
     }
-
     // ẨN / HIỆN ĐÁP ÁN ĐẦY ĐỦ
     function toggleFullAnswer() {
         const fullAnswerBox = document.getElementById('fullAnswerBox');
