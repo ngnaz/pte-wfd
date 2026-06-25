@@ -644,21 +644,23 @@
     });
 
     // ==========================================
-    // XỬ LÝ PHÍM TẮT: ENTER (CHECK) VÀ SPACE (AUDIO)
+    // XỬ LÝ PHÍM TẮT: ENTER VÀ CTRL + SPACE
     // ==========================================
     document.getElementById('userInput').addEventListener('keydown', function(event) {
         const audioPlayer = document.getElementById('audioPlayer');
 
-        // 1. Nhấn phím ENTER để check đáp án
-        if (event.key === 'Enter' && !event.shiftKey) {
+        // 1. Nhấn ENTER để check đáp án giống DailyDictation
+        if (event.key === 'Enter') {
             event.preventDefault(); // Chặn xuống dòng
-            checkAnswer(); // Kích hoạt hàm kiểm tra đáp án
+            checkAnswer();
         }
 
-        // 2. Nhấn phím SPACE khi ô nhập LIỆU ĐANG TRỐNG để Bật/Tắt Audio
+        // 2. Nhấn tổ hợp phím CTRL + SPACE (hoặc phím Space khi ô trống) để Bật/Tắt Audio
         if (event.key === ' ' || event.code === 'Space') {
-            if (this.value.trim() === "") {
-                event.preventDefault(); // Ngăn chặn gõ dấu cách vào ô trống
+            // Trường hợp 1: Ô nhập liệu đang trống -> Nhấn Space đơn thuần là Bật/Tắt nhạc
+            // Trường hợp 2: Đang gõ chữ -> Nhấn giữ Ctrl + Space để Bật/Tắt nhạc mà không bị dính dấu cách
+            if (this.innerText.trim() === "" || event.ctrlKey) {
+                event.preventDefault(); // Ngăn chặn hành vi gõ dấu cách mặc định
                 if (audioPlayer.paused) {
                     audioPlayer.play();
                 } else {
