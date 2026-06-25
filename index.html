@@ -91,7 +91,6 @@
             color: #999;
             font-size: 15px;
         }
-        }
 
         .word-count {
             text-align: right;
@@ -166,6 +165,7 @@
             display: inline-block;
             margin-right: 5px;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -184,7 +184,7 @@
         <audio id="audioPlayer" controls controlsList="nodownload"></audio>
     </div>
 
-    <div id="userInput" contenteditable="true" placeholder="Nhập câu trả lời của bạn tại đây... (Nhấn Space khi ô trống để Bật/Tắt Audio, nhấn Enter để Check)"></div>
+    <div id="userInput" contenteditable="true" placeholder="Nhập câu trả lời của bạn tại đây... (Nhấn Space khi ô trống để Bật/Tắt Audio, nhấn Ctrl + Space khi đang gõ, nhấn Enter để Check)"></div>
     <div class="word-count" id="wordCount">Số từ: 0</div>
 
     <div class="controls">
@@ -193,7 +193,7 @@
         <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Câu Tiếp Theo</button>
     </div>
 
-   <div class="result-section" id="resultSection">
+    <div class="result-section" id="resultSection">
         <div class="score" id="scoreDisplay"></div>
         <div style="margin-bottom: 5px; font-weight: bold; color: #555;">Tiến độ gõ của bạn:</div>
         <div class="comparison-box" id="comparisonDisplay"></div>
@@ -203,393 +203,112 @@
             <div id="fullAnswerBox" style="display: none; margin-top: 10px; padding: 10px; background: #fff; border: 1px dashed #ccc; text-align: left; font-weight: 500; color: #333;"></div>
         </div>
     </div>
+</div>
 
 <script>
     // ==========================================
-    // 1. DANH SÁCH CÂU HỎI (Bạn tự thêm câu ở đây)
+    // 1. DANH SÁCH CÂU HỎI
     // ==========================================
     const originalQuestions = [
-       {
-            audio: "wfd1.mp3",
-            transcript: "The application process may take longer than expected."
-        },
-        {
-            audio: "wfd2.mp3",
-            transcript: "You need to put these books on the table over there."
-        },
-        {
-            audio: "wfd3.mp3",
-            transcript: "When you attend a job interview, punctuality is the key."
-        },
-        {
-            audio: "wfd4.mp3",
-            transcript: "The celebrated theory is still the source of great controversy."
-        },
-        {
-            audio: "wfd5.mp3",
-            transcript: "A good architectural structure should be useful, durable, and beautiful."
-        },
-        {
-            audio: "wfd6.mp3",
-            transcript: "All of the assignments must be submitted in person to the faculty office."
-        },
-        {
-            audio: "wfd7.mp3",
-            transcript: "Before attending the lecture, you must register online or by post."
-        },
-        {
-            audio: "wfd8.mp3",
-            transcript: "Consumer confidence has a direct influence on sales."
-        },
-        {
-            audio: "wfd9.mp3",
-            transcript: "Daily practice can build confidence and improve skills."
-        },
-        {
-            audio: "wfd10.mp3",
-            transcript: "Education and training provide important skills for the labor force."
-        },
-        {
-            audio: "wfd11.mp3",
-            transcript: "Geography is generally divided into two main branches: human and physical."
-        },
-        {
-            audio: "wfd12.mp3",
-            transcript: "I don't think it's possible to solve the problem easily."
-        },
-        {
-            audio: "wfd13.mp3",
-            transcript: "Important details from the argument are missing in the summary."
-        },
-        {
-            audio: "wfd14.mp3",
-            transcript: "It is really a comprehensive program covering both theory and practice."
-        },
-        {
-            audio: "wfd15.mp3",
-            transcript: "It may not be possible to solve the problem easily."
-        },
-        {
-            audio: "wfd16.mp3",
-            transcript: "One of the election promises is to decrease the income tax."
-        },
-        {
-            audio: "wfd17.mp3",
-            transcript: "Our professor is hosting the business development conference."
-        },
-        {
-            audio: "wfd18.mp3",
-            transcript: "Some people argue that education is not that important."
-        },
-        {
-            audio: "wfd19.mp3",
-            transcript: "Some people believe that education should be free for all."
-        },
-        {
-            audio: "wfd20.mp3",
-            transcript: "Students are encouraged to monitor their own attendance."
-        },
-        {
-            audio: "wfd21.mp3",
-            transcript: "Students have the options to live in college residences or apartments."
-        },
-        {
-            audio: "wfd22.mp3",
-            transcript: "The ability to work with fellow students cannot be stressed enough."
-        },
-        {
-            audio: "wfd23.mp3",
-            transcript: "The cafeteria features sandwiches, salads, soup, fish and chicken."
-        },
-        {
-            audio: "wfd24.mp3",
-            transcript: "The chemistry building is located near the entrance of the campus."
-        },
-        {
-            audio: "wfd25.mp3",
-            transcript: "An introduction is an essential element of presentation."
-        },
-        {
-            audio: "wfd26.mp3",
-            transcript: "The key difference between courses is the kind of assessment."
-        },
-        {
-            audio: "wfd27.mp3",
-            transcript: "The lecture tomorrow will discuss the educational policy of the United States."
-        },
-        {
-            audio: "wfd28.mp3",
-            transcript: "The most popular courses still have a few places left."
-        },
-        {
-            audio: "wfd29.mp3",
-            transcript: "The museum is closed on the third Monday of every month."
-        },
-        {
-            audio: "wfd30.mp3",
-            transcript: "The other book isn't thorough but it's more insightful."
-        },
-        {
-            audio: "wfd31.mp3",
-            transcript: "The professor took a year off to work on her book."
-        },
-        {
-            audio: "wfd32.mp3",
-            transcript: "The rising temperature is changing the wildlife population."
-        },
-        {
-            audio: "wfd33.mp3",
-            transcript: "There is a pharmacy on campus near the bookstore."
-        },
-        {
-            audio: "wfd34.mp3",
-            transcript: "Traffic is the main cause of air pollution in many cities."
-        },
-        {
-            audio: "wfd35.mp3",
-            transcript: "You must be able to work in a team."
-        },
-        {
-            audio: "wfd36.mp3",
-            transcript: "You can use your laptops in the lecture."
-        },
-        {
-            audio: "wfd37.mp3",
-            transcript: "Protective clothing must always be worn in the laboratory."
-        },
-        {
-            audio: "wfd38.mp3",
-            transcript: "The science library is currently located on the ground floor."
-        },
-        {
-            audio: "wfd39.mp3",
-            transcript: "The office hours will be changed from next term."
-        },
-        {
-            audio: "wfd40.mp3",
-            transcript: "The teacher training includes observing the classes."
-        },
-        {
-            audio: "wfd41.mp3",
-            transcript: "Without doubt, this theory has a number of limitations."
-        },
-        {
-            audio: "wfd42.mp3",
-            transcript: "A group meeting will be held tomorrow in the library conference room."
-        },
-        {
-            audio: "wfd43.mp3",
-            transcript: "I thought it was through the small meeting room."
-        },
-        {
-            audio: "wfd44.mp3",
-            transcript: "We can have a lecture on the morning of Thursday."
-        },
-        {
-            audio: "wfd45.mp3",
-            transcript: "The new media have transcended traditional national boundaries."
-        },
-        {
-            audio: "wfd46.mp3",
-            transcript: "Take the first step by applying for the university scholarship now."
-        },
-        {
-            audio: "wfd47.mp3",
-            transcript: "Farming methods across the world have greatly developed recently."
-        },
-        {
-            audio: "wfd48.mp3",
-            transcript: "Much of the research is carried out in the laboratory."
-        },
-        {
-            audio: "wfd49.mp3",
-            transcript: "The printers automatically print two sides of each page."
-        },
-        {
-            audio: "wfd50.mp3",
-            transcript: "The library cafe is on the third floor."
-        },
-        {
-            audio: "wfd51.mp3",
-            transcript: "The library will be closed for staff training tomorrow morning."
-        },
-        {
-            audio: "wfd52.mp3",
-            transcript: "The north campus car park could be closed on Sunday."
-        },
-        {
-            audio: "wfd53.mp3",
-            transcript: "Requests for late applications will not be accepted under any circumstances."
-        },
-        {
-            audio: "wfd54.mp3",
-            transcript: "Social media is criticized for causing internet addiction."
-        },
-        {
-            audio: "wfd55.mp3",
-            transcript: "The university has invested in the new technology designed to support learning."
-        },
-        {
-            audio: "wfd56.mp3",
-            transcript: "Physics is a key subject for understanding the world and the universe."
-        },
-        {
-            audio: "wfd57.mp3",
-            transcript: "The student shop sells a range of stationery."
-        },
-        {
-            audio: "wfd58.mp3",
-            transcript: "Air pollution is a serious problem all over the world."
-        },
-        {
-            audio: "wfd59.mp3",
-            transcript: "The rising of the sea level indicates climate change."
-        },
-        {
-            audio: "wfd60.mp3",
-            transcript: "Designers need to keep up with social trends."
-         },
-        {
-            audio: "wfd61.mp3",
-            transcript: "Honey can be used as food and health product."
-         },
-        {
-            audio: "wfd62.mp3",
-            transcript: "The digital camera has some advantages over traditional film."
-         },
-        {
-            audio: "wfd63.mp3",
-            transcript: "The farmers need to adapt to the changes in the climate."
-         },
-        {
-            audio: "wfd64.mp3",
-            transcript: "A good abstract highlights the key points of your paper."
-         },
-        {
-            audio: "wfd65.mp3",
-            transcript: "A new collection of articles has just been published."
-         },
-        {
-            audio: "wfd66.mp3",
-            transcript: "The use of mobile phones is not permitted in the library."
-         },
-        {
-            audio: "wfd67.mp3",
-            transcript: "Many university lectures can now be viewed on the Internet."
-         },
-        {
-            audio: "wfd68.mp3",
-            transcript: "Rising sea temperature is a sign of climate change."
-         },
-        {
-            audio: "wfd69.mp3",
-            transcript: "The content is to define the combination of math and philosophy."
-         },
-        {
-            audio: "wfd70.mp3",
-            transcript: "New media journalism is an exciting area of study."
-         },
-        {
-            audio: "wfd71.mp3",
-            transcript: "Students are advised that all the lectures today have been canceled."
-         },
-        {
-            audio: "wfd72.mp3",
-            transcript: "Lecture outlines are available on the faculty board and the internal website."
-         },
-        {
-            audio: "wfd73.mp3",
-            transcript: "New materials and techniques are changing the style of modern architecture."
-         },
-        {
-            audio: "wfd74.mp3",
-            transcript: "A good academic paper should present a clear argument."
-         },
-        {
-            audio: "wfd75.mp3",
-            transcript: "There is a great deal of debate on this topic."
-         },
-        {
-            audio: "wfd76.mp3",
-            transcript: "Currently the growth of the economy is unpredictable."
-         },
-        {
-            audio: "wfd77.mp3",
-            transcript: "Students must wear protective clothing provided in the medical laboratory."
-         },
-        {
-            audio: "wfd78.mp3",
-            transcript: "It is important to plan your study time carefully."
-         },
-        {
-            audio: "wfd79.mp3",
-            transcript: "The population has risen sharply over the past twenty years."
-         },
-        {
-            audio: "wfd80.mp3",
-            transcript: "Music has the ability to shape our emotions."
-         },
-        {
-            audio: "wfd81.mp3",
-            transcript: "We are looking for new ways to engage learners."
-         },
-        {
-            audio: "wfd82.mp3",
-            transcript: "Class participation is an important part of your final grade."
-         },
-        {
-            audio: "wfd83.mp3",
-            transcript: "You can find the complaint form on the website."
-         },
-        {
-            audio: "wfd84.mp3",
-            transcript: "Having enough sleep has many positive benefits."
-         },
-        {
-            audio: "wfd85.mp3",
-            transcript: "You need to make sure that all your essays are handed in on time."
-         },
-        {
-            audio: "wfd86.mp3",
-            transcript: "The university auditorium is around the corner."
-         },
-        {
-            audio: "wfd87.mp3",
-            transcript: "The professor discussed the article yesterday in this class."
-         },
-        {
-            audio: "wfd88.mp3",
-            transcript: "The professor will have a lecture in the class."
-         },
-        {
-            audio: "wfd89.mp3",
-            transcript: "Peer group pressure has a significant effect on young people."
-         },
-        {
-            audio: "wfd90.mp3",
-            transcript: "TThe marketing budget has doubled since the beginning of the year."
-         },
-        {
-            audio: "wfd91.mp3",
-            transcript: "All of your assignments should be submitted by next Tuesday."
-         },
-        {
-            audio: "wfd92.mp3",
-            transcript: "Students should take the training course to use the gym."
-         },
-        {
-            audio: "wfd93.mp3",
-            transcript: "Participating in the class is the center of the course."
-         },
-        {
-            audio: "wfd94.mp3",
-            transcript: "You will acquire many skills during the academic studies."
-        }
+        { audio: "wfd1.mp3", transcript: "The application process may take longer than expected." },
+        { audio: "wfd2.mp3", transcript: "You need to put these books on the table over there." },
+        { audio: "wfd3.mp3", transcript: "When you attend a job interview, punctuality is the key." },
+        { audio: "wfd4.mp3", transcript: "The celebrated theory is still the source of great controversy." },
+        { audio: "wfd5.mp3", transcript: "A good architectural structure should be useful, durable, and beautiful." },
+        { audio: "wfd6.mp3", transcript: "All of the assignments must be submitted in person to the faculty office." },
+        { audio: "wfd7.mp3", transcript: "Before attending the lecture, you must register online or by post." },
+        { audio: "wfd8.mp3", transcript: "Consumer confidence has a direct influence on sales." },
+        { audio: "wfd9.mp3", transcript: "Daily practice can build confidence and improve skills." },
+        { audio: "wfd10.mp3", transcript: "Education and training provide important skills for the labor force." },
+        { audio: "wfd11.mp3", transcript: "Geography is generally divided into two main branches: human and physical." },
+        { audio: "wfd12.mp3", transcript: "I don't think it's possible to solve the problem easily." },
+        { audio: "wfd13.mp3", transcript: "Important details from the argument are missing in the summary." },
+        { audio: "wfd14.mp3", transcript: "It is really a comprehensive program covering both theory and practice." },
+        { audio: "wfd15.mp3", transcript: "It may not be possible to solve the problem easily." },
+        { audio: "wfd16.mp3", transcript: "One of the election promises is to decrease the income tax." },
+        { audio: "wfd17.mp3", transcript: "Our professor is hosting the business development conference." },
+        { audio: "wfd18.mp3", transcript: "Some people argue that education is not that important." },
+        { audio: "wfd19.mp3", transcript: "Some people believe that education should be free for all." },
+        { audio: "wfd20.mp3", transcript: "Students are encouraged to monitor their own attendance." },
+        { audio: "wfd21.mp3", transcript: "Students have the options to live in college residences or apartments." },
+        { audio: "wfd22.mp3", transcript: "The ability to work with fellow students cannot be stressed enough." },
+        { audio: "wfd23.mp3", transcript: "The cafeteria features sandwiches, salads, soup, fish and chicken." },
+        { audio: "wfd24.mp3", transcript: "The chemistry building is located near the entrance of the campus." },
+        { audio: "wfd25.mp3", transcript: "An introduction is an essential element of presentation." },
+        { audio: "wfd26.mp3", transcript: "The key difference between courses is the kind of assessment." },
+        { audio: "wfd27.mp3", transcript: "The lecture tomorrow will discuss the educational policy of the United States." },
+        { audio: "wfd28.mp3", transcript: "The most popular courses still have a few places left." },
+        { audio: "wfd29.mp3", transcript: "The museum is closed on the third Monday of every month." },
+        { audio: "wfd30.mp3", transcript: "The other book isn't thorough but it's more insightful." },
+        { audio: "wfd31.mp3", transcript: "The professor took a year off to work on her book." },
+        { audio: "wfd32.mp3", transcript: "The rising temperature is changing the wildlife population." },
+        { audio: "wfd33.mp3", transcript: "There is a pharmacy on campus near the bookstore." },
+        { audio: "wfd34.mp3", transcript: "Traffic is the main cause of air pollution in many cities." },
+        { audio: "wfd35.mp3", transcript: "You must be able to work in a team." },
+        { audio: "wfd36.mp3", transcript: "You can use your laptops in the lecture." },
+        { audio: "wfd37.mp3", transcript: "Protective clothing must always be worn in the laboratory." },
+        { audio: "wfd38.mp3", transcript: "The science library is currently located on the ground floor." },
+        { audio: "wfd39.mp3", transcript: "The office hours will be changed from next term." },
+        { audio: "wfd40.mp3", transcript: "The teacher training includes observing the classes." },
+        { audio: "wfd41.mp3", transcript: "Without doubt, this theory has a number of limitations." },
+        { audio: "wfd42.mp3", transcript: "A group meeting will be held tomorrow in the library conference room." },
+        { audio: "wfd43.mp3", transcript: "I thought it was through the small meeting room." },
+        { audio: "wfd44.mp3", transcript: "We can have a lecture on the morning of Thursday." },
+        { audio: "wfd45.mp3", transcript: "The new media have transcended traditional national boundaries." },
+        { audio: "wfd46.mp3", transcript: "Take the first step by applying for the university scholarship now." },
+        { audio: "wfd47.mp3", transcript: "Farming methods across the world have greatly developed recently." },
+        { audio: "wfd48.mp3", transcript: "Much of the research is carried out in the laboratory." },
+        { audio: "wfd49.mp3", transcript: "The printers automatically print two sides of each page." },
+        { audio: "wfd50.mp3", transcript: "The library cafe is on the third floor." },
+        { audio: "wfd51.mp3", transcript: "The library will be closed for staff training tomorrow morning." },
+        { audio: "wfd52.mp3", transcript: "The north campus car park could be closed on Sunday." },
+        { audio: "wfd53.mp3", transcript: "Requests for late applications will not be accepted under any circumstances." },
+        { audio: "wfd54.mp3", transcript: "Social media is criticized for causing internet addiction." },
+        { audio: "wfd55.mp3", transcript: "The university has invested in the new technology designed to support learning." },
+        { audio: "wfd56.mp3", transcript: "Physics is a key subject for understanding the world and the universe." },
+        { audio: "wfd57.mp3", transcript: "The student shop sells a range of stationery." },
+        { audio: "wfd58.mp3", transcript: "Air pollution is a serious problem all over the world." },
+        { audio: "wfd59.mp3", transcript: "The rising of the sea level indicates climate change." },
+        { audio: "wfd60.mp3", transcript: "Designers need to keep up with social trends." },
+        { audio: "wfd61.mp3", transcript: "Honey can be used as food and health product." },
+        { audio: "wfd62.mp3", transcript: "The digital camera has some advantages over traditional film." },
+        { audio: "wfd63.mp3", transcript: "The farmers need to adapt to the changes in the climate." },
+        { audio: "wfd64.mp3", transcript: "A good abstract highlights the key points of your paper." },
+        { audio: "wfd65.mp3", transcript: "A new collection of articles has just been published." },
+        { audio: "wfd66.mp3", transcript: "The use of mobile phones is not permitted in the library." },
+        { audio: "wfd67.mp3", transcript: "Many university lectures can now be viewed on the Internet." },
+        { audio: "wfd68.mp3", transcript: "Rising sea temperature is a sign of climate change." },
+        { audio: "wfd69.mp3", transcript: "The content is to define the combination of math and philosophy." },
+        { audio: "wfd70.mp3", transcript: "New media journalism is an exciting area of study." },
+        { audio: "wfd71.mp3", transcript: "Students are advised that all the lectures today have been canceled." },
+        { audio: "wfd72.mp3", transcript: "Lecture outlines are available on the faculty board and the internal website." },
+        { audio: "wfd73.mp3", transcript: "New materials and techniques are changing the style of modern architecture." },
+        { audio: "wfd74.mp3", transcript: "A good academic paper should present a clear argument." },
+        { audio: "wfd75.mp3", transcript: "There is a great deal of debate on this topic." },
+        { audio: "wfd76.mp3", transcript: "Currently the growth of the economy is unpredictable." },
+        { audio: "wfd77.mp3", transcript: "Students must wear protective clothing provided in the medical laboratory." },
+        { audio: "wfd78.mp3", transcript: "It is important to plan your study time carefully." },
+        { audio: "wfd79.mp3", transcript: "The population has risen sharply over the past twenty years." },
+        { audio: "wfd80.mp3", transcript: "Music has the ability to shape our emotions." },
+        { audio: "wfd81.mp3", transcript: "We are looking for new ways to engage learners." },
+        { audio: "wfd82.mp3", transcript: "Class participation is an important part of your final grade." },
+        { audio: "wfd83.mp3", transcript: "You can find the complaint form on the website." },
+        { audio: "wfd84.mp3", transcript: "Having enough sleep has many positive benefits." },
+        { audio: "wfd85.mp3", transcript: "You need to make sure that all your essays are handed in on time." },
+        { audio: "wfd86.mp3", transcript: "The university auditorium is around the corner." },
+        { audio: "wfd87.mp3", transcript: "The professor discussed the article yesterday in this class." },
+        { audio: "wfd88.mp3", transcript: "The professor will have a lecture in the class." },
+        { audio: "wfd89.mp3", transcript: "Peer group pressure has a significant effect on young people." },
+        { audio: "wfd90.mp3", transcript: "The marketing budget has doubled since the beginning of the year." },
+        { audio: "wfd91.mp3", transcript: "All of your assignments should be submitted by next Tuesday." },
+        { audio: "wfd92.mp3", transcript: "Students should take the training course to use the gym." },
+        { audio: "wfd93.mp3", transcript: "Participating in the class is the center of the course." },
+        { audio: "wfd94.mp3", transcript: "You will acquire many skills during the academic studies." }
     ];
 
     let questions = [];
     let currentIndex = 0;
-    let isAnswerShowing = false; // Trạng thái ẩn/hiện đáp án đầy đủ
+    let isAnswerShowing = false;
 
     // ==========================================
     // 2. KHỞI TẠO & XÁO TRỘN MẢNG (Shuffle)
@@ -612,6 +331,24 @@
         }
     }
 
+    function cleanWord(word) {
+        if (!word) return "";
+        return word.replace(/^[.,\/#!$%\^&\*;:{}=\-_`~()]+|[.,\/#!$%\^&\*;:{}=\-_`~()]+$/g, "").toLowerCase();
+    }
+
+    // Đặt con trỏ chuột xuống cuối thẻ contenteditable
+    function placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
     // ==========================================
     // 3. TẢI CÂU HỎI HIỆN TẠI
     // ==========================================
@@ -625,10 +362,9 @@
 
         progress.innerText = `Câu: ${index + 1}/${questions.length}`;
         audioPlayer.src = questions[index].audio;
-        userInput.value = "";
+        userInput.innerHTML = "";
         document.getElementById('wordCount').innerText = "Số từ: 0";
         
-        // Reset trạng thái hiển thị đáp án ẩn
         resultSection.classList.remove('result-active');
         fullAnswerBox.style.display = "none";
         toggleAnsBtn.innerText = "[Xem đáp án đầy đủ]";
@@ -639,7 +375,8 @@
 
     // Đếm số từ khi người dùng gõ
     document.getElementById('userInput').addEventListener('input', function() {
-        const words = this.value.trim().split(/\s+/).filter(w => w.length > 0);
+        const text = this.innerText || "";
+        const words = text.trim().split(/\s+/).filter(w => w.length > 0);
         document.getElementById('wordCount').innerText = `Số từ: ${words.length}`;
     });
 
@@ -648,19 +385,16 @@
     // ==========================================
     document.getElementById('userInput').addEventListener('keydown', function(event) {
         const audioPlayer = document.getElementById('audioPlayer');
+        const textContent = this.innerText.trim();
 
-        // 1. Nhấn ENTER để check đáp án giống DailyDictation
         if (event.key === 'Enter') {
             event.preventDefault(); // Chặn xuống dòng
             checkAnswer();
         }
 
-        // 2. Nhấn tổ hợp phím CTRL + SPACE (hoặc phím Space khi ô trống) để Bật/Tắt Audio
         if (event.key === ' ' || event.code === 'Space') {
-            // Trường hợp 1: Ô nhập liệu đang trống -> Nhấn Space đơn thuần là Bật/Tắt nhạc
-            // Trường hợp 2: Đang gõ chữ -> Nhấn giữ Ctrl + Space để Bật/Tắt nhạc mà không bị dính dấu cách
-            if (this.innerText.trim() === "" || event.ctrlKey) {
-                event.preventDefault(); // Ngăn chặn hành vi gõ dấu cách mặc định
+            if (textContent === "" || event.ctrlKey) {
+                event.preventDefault();
                 if (audioPlayer.paused) {
                     audioPlayer.play();
                 } else {
@@ -677,7 +411,8 @@
         const userInput = document.getElementById('userInput');
         const correctText = questions[currentIndex].transcript;
         
-        const userWords = userInput.value.trim().split(/\s+/).filter(w => w.length > 0);
+        let userText = userInput.innerText.replace(/\u00a0/g, " ").trim();
+        const userWords = userText.split(/\s+/).filter(w => w.length > 0);
         const correctWords = correctText.split(/\s+/);
 
         let nextWordHint = "";
@@ -690,31 +425,29 @@
         }
 
         if (nextWordHint) {
-            if (userInput.value.trim() === "") {
-                userInput.value = nextWordHint;
-            } else {
-                const currentText = userInput.value;
-                userInput.value = currentText.match(/\s$/) ? currentText + nextWordHint : currentText + " " + nextWordHint;
-            }
+            let span = document.createElement('span');
+            span.className = 'w-correct';
+            span.innerText = nextWordHint;
+            userInput.appendChild(span);
+            userInput.appendChild(document.createTextNode(" "));
+            
             userInput.dispatchEvent(new Event('input'));
-            userInput.focus();
+            placeCaretAtEnd(userInput);
         } else {
             alert("Bạn đã gõ chính xác hoàn toàn rồi, không cần gợi ý nữa!");
         }
     }
 
-   // ==========================================
-    // 4. THUẬT TOÁN CHẤM ĐIỂM CHUẨN DAILY DICTATION (ĐÃ FIX LỖI NHẬN DIỆN TEXT)
+    // ==========================================
+    // 4. THUẬT TOÁN CHẤM ĐIỂM CHUẨN DAILY DICTATION
     // ==========================================
     function checkAnswer() {
         const userInput = document.getElementById('userInput');
         
-        // Lấy text và làm sạch triệt để các ký tự khoảng trắng đặc biệt do trình duyệt tự sinh ra (&nbsp;, <br>)
         let userText = userInput.innerText;
-        userText = userText.replace(/\u00a0/g, " "); // Biến ký tự khoảng trắng ẩn &nbsp; thành dấu cách thường
+        userText = userText.replace(/\u00a0/g, " "); 
         userText = userText.trim();
 
-        // Kiểm tra xem người dùng đã thực sự gõ chữ chưa (loại bỏ trường hợp chỉ có khoảng trắng)
         if (!userText || userText.length === 0) {
             alert("Vui lòng gõ nội dung nghe được!");
             return;
@@ -725,16 +458,18 @@
         const correctWords = correctText.split(/\s+/);
 
         let correctCount = 0;
-        userInput.innerHTML = ""; // Xóa để tạo lại các từ có màu
+        let htmlResult = "";
+        userInput.innerHTML = ""; 
 
         userWords.forEach((uWord, index) => {
-            // Nếu từ đó chứa ký tự gạch dưới (người dùng chưa sửa từ sai cũ), giữ nguyên dấu gạch dưới đỏ
             if (uWord.includes('_')) {
                 let underlineSpan = document.createElement('span');
                 underlineSpan.className = 'w-incorrect';
                 underlineSpan.innerText = uWord;
                 userInput.appendChild(underlineSpan);
                 userInput.appendChild(document.createTextNode(" "));
+                
+                htmlResult += `<span class="w-incorrect">${uWord}</span> `;
                 return;
             }
 
@@ -743,13 +478,13 @@
 
             if (correspondingCorrectWord && cleanUWord === cleanWord(correspondingCorrectWord)) {
                 correctCount++;
-                // Từ ĐÚNG: Hiện màu xanh lá giống DailyDictation
                 let span = document.createElement('span');
                 span.className = 'w-correct';
-                span.innerText = correspondingCorrectWord; // Lấy theo đúng định dạng gốc của đáp án
+                span.innerText = correspondingCorrectWord; 
                 userInput.appendChild(span);
+                
+                htmlResult += `<span class="w-correct">${correspondingCorrectWord}</span> `;
             } else {
-                // Từ SAI: Biến thành chuỗi dấu gạch dưới `_` đỏ có độ dài bằng từ đúng tại vị trí đó
                 const targetWord = correspondingCorrectWord ? correspondingCorrectWord : uWord;
                 const underscores = "_".repeat(targetWord.length);
                 
@@ -757,21 +492,24 @@
                 span.className = 'w-incorrect';
                 span.innerText = underscores;
                 userInput.appendChild(span);
+                
+                htmlResult += `<span class="w-incorrect">${underscores}</span> `;
             }
-            // Thêm khoảng trắng giữa các từ
             userInput.appendChild(document.createTextNode(" "));
         });
 
-        // Hiển thị điểm số ở góc dưới
         const scoreDisplay = document.getElementById('scoreDisplay');
         scoreDisplay.innerHTML = `Khớp đúng: <span style="color: var(--success-color)">${correctCount}/${correctWords.length}</span> từ.`;
         
+        const comparisonDisplay = document.getElementById('comparisonDisplay');
+        comparisonDisplay.innerHTML = htmlResult + `<br><br><small style="color: #888">* Chú thích: <span class="w-correct">Đúng từ & thứ tự</span> | <span class="w-incorrect">Sai chính tả hoặc sai vị trí</span></small>`;
+
         document.getElementById('fullAnswerBox').innerText = correctText;
         document.getElementById('resultSection').classList.add('result-active');
 
-        // Đưa con trỏ chuột về cuối ô gõ để người dùng sửa tiếp dễ dàng
         placeCaretAtEnd(userInput);
     }
+
     // ẨN / HIỆN ĐÁP ÁN ĐẦY ĐỦ
     function toggleFullAnswer() {
         const fullAnswerBox = document.getElementById('fullAnswerBox');
